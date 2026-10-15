@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modelo de Áreas | Simón Berrío Arango - IU Digital</title>
+  <style>
+    :root {
+      --bg-main: #f4f6f9;
+      --card-bg: #ffffff;
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --text-main: #1f2937;
+      --border-color: #e5e7eb;
+      
+      /* Colores de las Fichas Algebraicas */
+      --tile-a2: #0284c7;   /* Cuadrado a^2 */
+      --tile-b2: #7c3aed;   /* Cuadrado b^2 */
+      --tile-u1: #d97706;   /* Cuadrado 1 */
+      --tile-ab: #2563eb;   /* Rectángulo ab */
+      --tile-a1: #059669;   /* Rectángulo a */
+      --tile-b1: #db2777;   /* Rectángulo b */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Encabezado */
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Layout Principal */
+    .app-container {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Panel Lateral */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.2rem;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .panel h2 {
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    /* Fichas de la paleta */
+    .tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+    }
+
+    .btn-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 0.5rem;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-tile:hover {
+      border-color: var(--primary-light);
+      background: #eff6ff;
+      transform: translateY(-2px);
+    }
+
+    .tile-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      border-radius: 4px;
+      margin-bottom: 0.4rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .btn-tile span {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    /* Dimensiones en la paleta */
+    .prev-a2 { width: 40px; height: 40px; background: var(--tile-a2); }
+    .prev-b2 { width: 50px; height: 50px; background: var(--tile-b2); }
+    .prev-u1 { width: 22px; height: 22px; background: var(--tile-u1); }
+    .prev-ab { width: 40px; height: 50px; background: var(--tile-ab); }
+    .prev-a1 { width: 40px; height: 22px; background: var(--tile-a1); }
+    .prev-b1 { width: 50px; height: 22px; background: var(--tile-b1); }
+
+    /* Botones de acción */
+    .action-btn {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-clear { background: #ef4444; color: white; }
+    .btn-clear:hover { background: #dc2626; }
+
+    .btn-preset { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-preset:hover { background: #e2e8f0; }
+
+    /* Área Principal */
+    .main-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    /* Panel de Resultados Algebraicos */
+    .results-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .res-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .res-box label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .res-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .status-incomplete { background: #fef3c7; color: #b45309; }
+    .status-complete { background: #dcfce7; color: #15803d; }
+
+    /* Contenedor del Lienzo */
+    .canvas-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      padding-top: 2.5rem; /* Margen superior para que no se corten los controles superiores */
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .canvas-toolbar {
+      position: absolute;
+      top: 0.6rem;
+      left: 1rem;
+      right: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .legend-info {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    /* El Lienzo de Dibujo */
+    #workspace {
+      width: 100%;
+      height: 520px;
+      background-color: #ffffff;
+      background-image: 
+        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+      background-size: 30px 30px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Ficha colocada en el Lienzo */
+    .tile {
+      position: absolute;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: grab;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+      transition: width 0.2s ease, height 0.2s ease, box-shadow 0.15s ease;
+      box-sizing: border-box;
+      border: 2px solid rgba(255,255,255,0.4);
+      user-select: none;
+    }
+
+    .tile:active {
+      cursor: grabbing;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+    }
+
+    .tile.selected {
+      outline: 3px solid #f59e0b;
+      outline-offset: 2px;
+    }
+
+    .tile-label {
+      pointer-events: none;
+    }
+
+    /* Controles en ficha seleccionada */
+    .tile-controls {
+      position: absolute;
+      top: -38px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      border-radius: 6px;
+      padding: 3px 8px;
+      display: flex;
+      gap: 6px;
+      z-index: 10000;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      pointer-events: auto;
+    }
+
+    .tile-btn {
+      background: #334155;
+      border: none;
+      color: white;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .tile-btn:hover {
+      background: #475569;
+    }
+
+    .pedagogy-panel {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary-light);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #334155;
+    }
+
+    .pedagogy-panel h3 {
+      font-size: 0.95rem;
+      color: var(--primary);
+      margin-bottom: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Modelo de Áreas para Factorización de Polinomios</h1>
+      <p>Simulación Interactiva | Actividad 1: Antes de Integrar</p>
+    </div>
+    <div style="text-align: right;">
+      <strong>Simón Berrío Arango</strong>
+      <p>Ingeniería de Software y Datos | IU Digital</p>
+    </div>
+  </header>
+
+  <div class="app-container">
+    
+    <div class="sidebar">
+      
+      <div class="panel">
+        <h2>Fichas Algebraicas</h2>
+        <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.8rem;">Haz clic para agregar al lienzo:</p>
+        <div class="tiles-grid">
+          <div class="btn-tile" onclick="addTile('a2')">
+            <div class="tile-preview prev-a2">a²</div>
+            <span>Lado a×a</span>
+          </div>
+          <div class="btn-tile" onclick="addTile('b2')">
+            <div class="tile-preview prev-b2">b²</div>
+            <span>Lado b×b</span>
+          </div>
+          <div class="btn-tile" onclick="addTile('u1')">
+            <div class="tile-preview prev-u1">1</div>
+            <span>Lado 1×1</span>
+          </div>
+          <div class="btn-tile" onclick="addTile('ab')">
+            <div class="tile-preview prev-ab">ab</div>
+            <span>Lados a×b</span>
+          </div>
+          <div class="btn-tile" onclick="addTile('a1')">
+            <div class="tile-preview prev-a1">a</div>
+            <span>Lados a×1</span>
+          </div>
+          <div class="btn-tile" onclick="addTile('b1')">
+            <div class="tile-preview prev-b1">b</div>
+            <span>Lados b×1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Retos Guiados</h2>
+        <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.6rem;">Carga combinaciones para practicar:</p>
+        <button class="action-btn btn-preset" onclick="loadPreset(1)">1. (a + 1)(a + 2)</button>
+        <button class="action-btn btn-preset" onclick="loadPreset(2)">2. (a + b)²</button>
+        <button class="action-btn btn-preset" onclick="loadPreset(3)">3. (a + b)(b + 1)</button>
+        <button class="action-btn btn-preset" onclick="loadPreset(4)">4. (a + 2)(b + 1)</button>
+        <button class="action-btn btn-clear" onclick="clearCanvas()" style="margin-top:1rem;">🗑️ Limpiar Lienzo</button>
+      </div>
+
+      <div class="pedagogy-panel">
+        <h3>💡 Conexión con el Cálculo</h3>
+        <p>Al organizar unidades en rectángulos continuos, estás calculando áreas mediante sumas algebraicas. Este principio es la base de las <strong>Sumas de Riemann</strong> y la <strong>Integral Definida</strong>.</p>
+      </div>
+
+    </div>
+
+    <div class="main-workspace">
+      
+      <div class="results-card">
+        <div class="res-box">
+          <label>Área Total (Polinomio):</label>
+          <div id="poly-display" class="res-value">0</div>
+        </div>
+
+        <div class="res-box">
+          <label>Dimensiones Detectadas:</label>
+          <div id="dims-display" class="res-value" style="font-size:1.05rem; color:#475569;">
+            Base: - | Altura: -
+          </div>
+        </div>
+
+        <div class="res-box" style="align-items: flex-end;">
+          <div id="status-badge" class="status-badge status-incomplete">
+            Agrega fichas al lienzo
+          </div>
+          <div id="factor-display" style="font-size:0.9rem; font-weight:bold; color:#1e3a8a; margin-top:0.4rem; text-align:right;"></div>
+        </div>
+      </div>
+
+      <div class="canvas-container">
+        <div class="canvas-toolbar">
+          <div class="legend-info">
+            📏 Escala: <strong>1u = 30px</strong> | <strong>a = 90px (3u)</strong> | <strong>b = 150px (5u)</strong>
+          </div>
+          <div style="font-size:0.85rem; color:#64748b;">
+            Acciones: Arrastra | Botón 🔄 o Tecla <strong>R</strong>: Rotar | Tecla <strong>Supr</strong>: Eliminar
+          </div>
+        </div>
+
+        <div id="workspace" onclick="deselectAll(event)"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const GRID_SIZE = 30; // 1 unidad = 30px
+    const workspace = document.getElementById('workspace');
+
+    const TILE_SPECS = {
+      'a2': { w: 90,  h: 90,  color: '#0284c7', label: 'a²', type: 'a2' },
+      'b2': { w: 150, h: 150, color: '#7c3aed', label: 'b²', type: 'b2' },
+      'u1': { w: 30,  h: 30,  color: '#d97706', label: '1',  type: 'u1' },
+      'ab': { w: 90,  h: 150, color: '#2563eb', label: 'ab', type: 'ab' },
+      'a1': { w: 90,  h: 30,  color: '#059669', label: 'a',  type: 'a1' },
+      'b1': { w: 150, h: 30,  color: '#db2777', label: 'b',  type: 'b1' }
+    };
+
+    let tiles = [];
+    let selectedTileId = null;
+    let nextId = 1;
+    let maxZIndex = 10;
+
+    function addTile(type, customX = null, customY = null, customW = null, customH = null) {
+      const spec = TILE_SPECS[type];
+      if (!spec) return;
+      
+      const id = 'tile_' + (nextId++);
+
+      // Posicionamiento inicial en la cuadrícula
+      const defaultX = Math.round((30 + (tiles.length * 30) % 240) / GRID_SIZE) * GRID_SIZE;
+      const defaultY = Math.round((30 + (tiles.length * 30) % 180) / GRID_SIZE) * GRID_SIZE;
+
+      const x = customX !== null ? customX : defaultX;
+      const y = customY !== null ? customY : defaultY;
+      const w = customW !== null ? customW : spec.w;
+      const h = customH !== null ? customH : spec.h;
+
+      maxZIndex++;
+      const tileData = { id, type, x, y, w, h, label: spec.label, color: spec.color, zIndex: maxZIndex };
+      tiles.push(tileData);
+
+      renderTile(tileData);
+      selectTile(id);
+      updateAnalysis();
+    }
+
+    function renderTile(t) {
+      const el = document.createElement('div');
+      el.id = t.id;
+      el.className = 'tile';
+      el.style.width = t.w + 'px';
+      el.style.height = t.h + 'px';
+      el.style.left = t.x + 'px';
+      el.style.top = t.y + 'px';
+      el.style.backgroundColor = t.color;
+      el.style.zIndex = t.zIndex;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'tile-label';
+      labelSpan.innerText = t.label;
+      el.appendChild(labelSpan);
+
+      el.addEventListener('mousedown', (e) => startDrag(e, t.id));
+      el.addEventListener('touchstart', (e) => startDrag(e, t.id), { passive: false });
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectTile(t.id);
+      });
+
+      workspace.appendChild(el);
+    }
+
+    function selectTile(id) {
+      if (selectedTileId === id && document.getElementById('controls_' + id)) {
+        return; // Ya está seleccionada y los controles existen
+      }
+
+      deselectAll();
+      selectedTileId = id;
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      maxZIndex++;
+      el.style.zIndex = maxZIndex;
+      el.classList.add('selected');
+
+      // Crear barra de botones flotantes
+      const controls = document.createElement('div');
+      controls.className = 'tile-controls';
+      controls.id = 'controls_' + id;
+
+      // EVITAR que mousedown/touchstart en la barra active el arrastre
+      controls.addEventListener('mousedown', (e) => e.stopPropagation());
+      controls.addEventListener('touchstart', (e) => e.stopPropagation());
+
+      controls.innerHTML = `
+        <button class="tile-btn" onclick="rotateSelected(event)" title="Rotar 90°">🔄 Rotar</button>
+        <button class="tile-btn" onclick="deleteSelected(event)" style="color:#f87171;" title="Eliminar">🗑️</button>
+      `;
+      el.appendChild(controls);
+    }
+
+    function deselectAll(e) {
+      if (e && e.target !== workspace) return;
+      selectedTileId = null;
+      document.querySelectorAll('.tile').forEach(el => {
+        el.classList.remove('selected');
+        const ctrl = el.querySelector('.tile-controls');
+        if (ctrl) ctrl.remove();
+      });
+    }
+
+    // FUNCIÓN DE ROTACIÓN CORREGIDA Y OPTIMIZADA
+    function rotateSelected(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!selectedTileId) return;
+
+      const t = tiles.find(item => item.id === selectedTileId);
+      if (!t) return;
+
+      // 1. Intercambiar dimensiones en el modelo numérico
+      const temp = t.w;
+      t.w = t.h;
+      t.h = temp;
+
+      const el = document.getElementById(t.id);
+      if (el) {
+        // 2. Intercambiar estilos en el DOM físico
+        el.style.width = t.w + 'px';
+        el.style.height = t.h + 'px';
+
+        // 3. Reajustar coordenadas si al girar la ficha sobrepasa el lienzo
+        const maxW = workspace.clientWidth - t.w;
+        const maxH = workspace.clientHeight - t.h;
+        if (t.x > maxW) t.x = Math.max(0, Math.floor(maxW / GRID_SIZE) * GRID_SIZE);
+        if (t.y > maxH) t.y = Math.max(0, Math.floor(maxH / GRID_SIZE) * GRID_SIZE);
+
+        el.style.left = t.x + 'px';
+        el.style.top = t.y + 'px';
+      }
+
+      updateAnalysis();
+    }
+
+    function deleteSelected(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!selectedTileId) return;
+
+      const index = tiles.findIndex(item => item.id === selectedTileId);
+      if (index !== -1) {
+        const el = document.getElementById(selectedTileId);
+        if (el) el.remove();
+        tiles.splice(index, 1);
+      }
+      selectedTileId = null;
+      updateAnalysis();
+    }
+
+    function clearCanvas() {
+      workspace.innerHTML = '';
+      tiles = [];
+      selectedTileId = null;
+      updateAnalysis();
+    }
+
+    let isDragging = false;
+    let dragTileId = null;
+    let startX, startY, origX, origY;
+
+    function startDrag(e, id) {
+      isDragging = true;
+      dragTileId = id;
+      selectTile(id);
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      startX = clientX;
+      startY = clientY;
+
+      const t = tiles.find(item => item.id === id);
+      origX = t.x;
+      origY = t.y;
+
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('touchmove', onDrag, { passive: false });
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchend', stopDrag);
+    }
+
+    function onDrag(e) {
+      if (!isDragging || !dragTileId) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const dx = clientX - startX;
+      const dy = clientY - startY;
+
+      const t = tiles.find(item => item.id === dragTileId);
+      
+      let newX = Math.round((origX + dx) / GRID_SIZE) * GRID_SIZE;
+      let newY = Math.round((origY + dy) / GRID_SIZE) * GRID_SIZE;
+
+      const maxW = workspace.clientWidth - t.w;
+      const maxH = workspace.clientHeight - t.h;
+      newX = Math.max(0, Math.min(newX, Math.floor(maxW / GRID_SIZE) * GRID_SIZE));
+      newY = Math.max(0, Math.min(newY, Math.floor(maxH / GRID_SIZE) * GRID_SIZE));
+
+      t.x = newX;
+      t.y = newY;
+
+      const el = document.getElementById(t.id);
+      el.style.left = newX + 'px';
+      el.style.top = newY + 'px';
+
+      updateAnalysis();
+    }
+
+    function stopDrag() {
+      isDragging = false;
+      dragTileId = null;
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('touchmove', onDrag);
+      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('touchend', stopDrag);
+    }
+
+    // Atajo de teclado (Tecla R para rotar)
+    document.addEventListener('keydown', (e) => {
+      if (selectedTileId) {
+        if (e.key === 'r' || e.key === 'R') {
+          rotateSelected(e);
+        }
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          deleteSelected(e);
+        }
+      }
+    });
+
+    // Cargar Retos Guiados con Orientación Correcta de Fichas
+    function loadPreset(num) {
+      clearCanvas();
+      if (num === 1) { // (a + 1)(a + 2) = a² + 3a + 2
+        addTile('a2', 30, 30, 90, 90);
+        addTile('a1', 120, 30, 30, 90);  // a vertical
+        addTile('a1', 150, 30, 30, 90);  // a vertical
+        addTile('a1', 30, 120, 90, 30);  // a horizontal
+        addTile('u1', 120, 120, 30, 30);
+        addTile('u1', 150, 120, 30, 30);
+      } else if (num === 2) { // (a + b)² = a² + 2ab + b²
+        addTile('a2', 30, 30, 90, 90);
+        addTile('ab', 120, 30, 150, 90); // ab horizontal
+        addTile('ab', 30, 120, 90, 150); // ab vertical
+        addTile('b2', 120, 120, 150, 150);
+      } else if (num === 3) { // (a + b)(b + 1)
+        addTile('ab', 30, 30, 90, 150);  // ab vertical
+        addTile('b2', 120, 30, 150, 150);
+        addTile('a1', 30, 180, 90, 30);  // a horizontal
+        addTile('b1', 120, 180, 150, 30); // b horizontal
+      } else if (num === 4) { // (a + 2)(b + 1)
+        addTile('ab', 30, 30, 90, 150);  // ab vertical
+        addTile('b1', 120, 30, 30, 150); // b vertical
+        addTile('b1', 150, 30, 30, 150); // b vertical
+        addTile('a1', 30, 180, 90, 30);  // a horizontal
+        addTile('u1', 120, 180, 30, 30);
+        addTile('u1', 150, 180, 30, 30);
+      }
+    }
+
+    function updateAnalysis() {
+      const polyDisplay = document.getElementById('poly-display');
+      const dimsDisplay = document.getElementById('dims-display');
+      const statusBadge = document.getElementById('status-badge');
+      const factorDisplay = document.getElementById('factor-display');
+
+      if (tiles.length === 0) {
+        polyDisplay.innerText = '0';
+        dimsDisplay.innerText = 'Base: - | Altura: -';
+        statusBadge.className = 'status-badge status-incomplete';
+        statusBadge.innerText = 'Agrega fichas al lienzo';
+        factorDisplay.innerText = '';
+        return;
+      }
+
+      const polyText = calculatePolynomial();
+      polyDisplay.innerText = polyText;
+
+      const rectAnalysis = checkRectangle();
+
+      if (rectAnalysis.isValid) {
+        statusBadge.className = 'status-badge status-complete';
+        statusBadge.innerText = '¡Rectángulo Perfecto Formado! 🎉';
+        dimsDisplay.innerText = `Base: ${rectAnalysis.baseExpr} | Altura: ${rectAnalysis.heightExpr}`;
+        factorDisplay.innerText = `Factorización: (${rectAnalysis.baseExpr}) × (${rectAnalysis.heightExpr}) = ${polyText}`;
+      } else {
+        statusBadge.className = 'status-badge status-incomplete';
+        statusBadge.innerText = 'Alinea las fichas formando un rectángulo continuo';
+        dimsDisplay.innerText = 'Base: En construcción... | Altura: En construcción...';
+        factorDisplay.innerText = '';
+      }
+    }
+
+    function calculatePolynomial() {
+      const counts = { a2: 0, b2: 0, u1: 0, ab: 0, a1: 0, b1: 0 };
+      tiles.forEach(t => counts[t.type]++);
+
+      const terms = [];
+      if (counts.a2 > 0) terms.push(counts.a2 === 1 ? 'a²' : counts.a2 + 'a²');
+      if (counts.ab > 0) terms.push(counts.ab === 1 ? 'ab' : counts.ab + 'ab');
+      if (counts.b2 > 0) terms.push(counts.b2 === 1 ? 'b²' : counts.b2 + 'b²');
+      if (counts.a1 > 0) terms.push(counts.a1 === 1 ? 'a' : counts.a1 + 'a');
+      if (counts.b1 > 0) terms.push(counts.b1 === 1 ? 'b' : counts.b1 + 'b');
+      if (counts.u1 > 0) terms.push(counts.u1.toString());
+
+      return terms.length > 0 ? terms.join(' + ') : '0';
+    }
+
+    function checkRectangle() {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      let totalTileArea = 0;
+
+      tiles.forEach(t => {
+        minX = Math.min(minX, t.x);
+        minY = Math.min(minY, t.y);
+        maxX = Math.max(maxX, t.x + t.w);
+        maxY = Math.max(maxY, t.y + t.h);
+        totalTileArea += t.w * t.h;
+      });
+
+      const boxW = maxX - minX;
+      const boxH = maxY - minY;
+      const boxArea = boxW * boxH;
+
+      const gridCols = Math.round(boxW / GRID_SIZE);
+      const gridRows = Math.round(boxH / GRID_SIZE);
+      const cellMap = Array.from({ length: gridRows }, () => Array(gridCols).fill(0));
+
+      let overlap = false;
+
+      tiles.forEach(t => {
+        const startCol = Math.round((t.x - minX) / GRID_SIZE);
+        const startRow = Math.round((t.y - minY) / GRID_SIZE);
+        const numCols = Math.round(t.w / GRID_SIZE);
+        const numRows = Math.round(t.h / GRID_SIZE);
+
+        for (let r = startRow; r < startRow + numRows; r++) {
+          for (let c = startCol; c < startCol + numCols; c++) {
+            if (r >= 0 && r < gridRows && c >= 0 && c < gridCols) {
+              cellMap[r][c]++;
+              if (cellMap[r][c] > 1) overlap = true;
+            }
+          }
+        }
+      });
+
+      let holes = false;
+      for (let r = 0; r < gridRows; r++) {
+        for (let c = 0; c < gridCols; c++) {
+          if (cellMap[r][c] === 0) holes = true;
+        }
+      }
+
+      const isValid = !overlap && !holes && (totalTileArea === boxArea);
+
+      if (!isValid) return { isValid: false };
+
+      const topTiles = tiles.filter(t => t.y === minY).sort((a, b) => a.x - b.x);
+      const leftTiles = tiles.filter(t => t.x === minX).sort((a, b) => a.y - b.y);
+
+      const baseTerms = topTiles.map(t => pxToTerm(t.w));
+      const heightTerms = leftTiles.map(t => pxToTerm(t.h));
+
+      return {
+        isValid: true,
+        baseExpr: formatDimensionExpr(baseTerms),
+        heightExpr: formatDimensionExpr(heightTerms)
+      };
+    }
+
+    function pxToTerm(px) {
+      if (px === 30) return '1';
+      if (px === 90) return 'a';
+      if (px === 150) return 'b';
+      return '?';
+    }
+
+    function formatDimensionExpr(terms) {
+      let cntA = 0, cntB = 0, cnt1 = 0;
+      terms.forEach(t => {
+        if (t === 'a') cntA++;
+        else if (t === 'b') cntB++;
+        else if (t === '1') cnt1++;
+      });
+
+      const parts = [];
+      if (cntA > 0) parts.push(cntA === 1 ? 'a' : cntA + 'a');
+      if (cntB > 0) parts.push(cntB === 1 ? 'b' : cntB + 'b');
+      if (cnt1 > 0) parts.push(cnt1.toString());
+
+      return parts.join(' + ') || '0';
+    }
+
+    // Inicialización al cargar la página
+    loadPreset(1);
+  </script>
+
+</body>
+</html>
